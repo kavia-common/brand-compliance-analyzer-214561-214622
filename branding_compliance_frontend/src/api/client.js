@@ -77,7 +77,7 @@ if (!resolvedBase) {
   // Absolute safe default for this environment
   resolvedBase = 'https://vscode-internal-27606-beta.beta01.cloud.kavia.ai:3001/api/v1';
 }
-const BASE = trimSlash(resolvedBase);
+const BASE = "https://vscode-internal-27606-beta.beta01.cloud.kavia.ai:3001/api/v1";
 
 // PUBLIC_INTERFACE
 export function getApiBase() {
