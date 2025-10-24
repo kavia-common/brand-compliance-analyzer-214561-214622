@@ -1,11 +1,13 @@
  // PUBLIC_INTERFACE
  // Brand Compliance API Client
  // Provides methods to interact with the FastAPI backend v1 endpoints.
- // Base URL is configurable via REACT_APP_API_BASE. In cloud preview, must be HTTPS to avoid mixed content.
- // Health endpoint is served at the API base root (GET {REACT_APP_API_BASE}).
- // Other endpoints continue under the /api/v1 path which should be included in REACT_APP_API_BASE.
- // Example for this environment (no trailing slash):
+ // Base URL is configurable via REACT_APP_API_BASE (no trailing slash) and MUST include '/api/v1'.
+ // Health endpoint is served at the API base root (GET {REACT_APP_API_BASE}) and is expected to respond.
+ // All other endpoints are appended to this base, e.g. POST {REACT_APP_API_BASE}/jobs.
+ // Example (no trailing slash):
  //   REACT_APP_API_BASE=https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3001/api/v1
+ //
+ // Do not hardcode absolute URLs; always use the configured base.
  
  /* eslint-disable no-console */
  /**

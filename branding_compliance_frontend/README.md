@@ -12,10 +12,27 @@ Elegant Royal Purple themed React UI for uploading assets, running analysis, pre
   - `npm install`
   - `npm start`
 
+## API Base and Paths
+
+- REACT_APP_API_BASE MUST include `/api/v1` and MUST NOT end with a trailing slash.
+  - Example: `https://domain:3001/api/v1`
+- Health check is performed via `GET {REACT_APP_API_BASE}` on app load.
+- All API calls are made relative to this base:
+  - Create Job: `POST {REACT_APP_API_BASE}/jobs`
+  - Delete Job: `DELETE {REACT_APP_API_BASE}/jobs/{job_id}`
+  - Uploads: `POST {REACT_APP_API_BASE}/jobs/{job_id}/upload/assets|old-brand|new-brand`
+  - Analyze: `POST {REACT_APP_API_BASE}/jobs/{job_id}/analyze`
+  - Status: `GET {REACT_APP_API_BASE}/jobs/{job_id}/status`
+  - Results: `GET {REACT_APP_API_BASE}/jobs/{job_id}/results`
+  - Preview: `GET {REACT_APP_API_BASE}/jobs/{job_id}/assets/{asset_id}/preview?view=original|overlay|fixed`
+  - Fix: `POST {REACT_APP_API_BASE}/jobs/{job_id}/assets/{asset_id}/fix`
+  - Batch Fix: `POST {REACT_APP_API_BASE}/jobs/{job_id}/fix/batch`
+  - Download: `GET {REACT_APP_API_BASE}/jobs/{job_id}/download?type=zip|report|both`
+
 Notes:
-- The app performs a health check by requesting the base URL directly (GET `{REACT_APP_API_BASE}`) on load. Ensure the backend serves health at `/` relative to the API base and that CORS allows the frontend origin (http://localhost:3000 in local dev, or https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3000 in preview).
+- Avoid hardcoded absolute URLs in source; always use the configured base.
 - In preview environments, HTTPS is required to avoid mixed content. Do not point to `http://` when the frontend runs on `https://`.
-- If a reverse proxy maps `/api/v1` to backend, you may use a relative `/api/v1`, but in this project we prefer the explicit HTTPS backend URL above.
+- If a reverse proxy maps `/api/v1` to backend, a relative `/api/v1` may work, but for this project we prefer the explicit HTTPS backend URL above.
 
 ## Usage
 
