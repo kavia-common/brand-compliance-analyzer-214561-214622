@@ -1,11 +1,41 @@
-//
 // PUBLIC_INTERFACE
 // Brand Compliance API Client
 // Provides methods to interact with the FastAPI backend v1 endpoints.
 // Base URL is configurable via REACT_APP_API_BASE, defaulting to http://localhost:3001/api/v1
-//
-const BASE =
-  process.env.REACT_APP_API_BASE?.replace(/\/+$/, '') || 'http://localhost:3001/api/v1';
+// In preview environments, prefers same-host port 3001 or relative /api/v1 when proxied.
+
+/**
+ * Trim trailing slashes for consistent URL building.
+ */
+function trimSlash(s) {
+  return (s || '').replace(/\/+$/, '');
+}
+
+// Resolve API base:
+// 1) REACT_APP_API_BASE if provided (no trailing slash)
+// 2) If on :3000, assume backend on same host :3001
+// 3) If running behind a proxy that exposes /api/v1, use relative path
+// 4) Fallback to localhost:3001/api/v1
+const envBase = trimSlash(process.env.REACT_APP_API_BASE);
+let resolvedBase = envBase;
+
+if (!resolvedBase) {
+  try {
+    const loc = window.location;
+    if (loc && loc.hostname && loc.port === '3000') {
+      resolvedBase = `${loc.protocol}//${loc.hostname}:3001/api/v1`;
+    } else if (loc && loc.hostname) {
+      // Some preview setups map /api/v1 through the same origin
+      resolvedBase = '/api/v1';
+    }
+  } catch {
+    // window not available in tests/SSR; ignore
+  }
+}
+if (!resolvedBase) {
+  resolvedBase = 'http://localhost:3001/api/v1';
+}
+const BASE = trimSlash(resolvedBase);
 
 // PUBLIC_INTERFACE
 export function getApiBase() {
@@ -19,7 +49,6 @@ async function handleJson(res) {
     const text = await res.text();
     throw new Error(text || `HTTP ${res.status}`);
   }
-  // Some endpoints may return empty JSON; try/catch parse
   try {
     return await res.json();
   } catch {
@@ -38,9 +67,31 @@ async function handleBlob(res) {
 
 // PUBLIC_INTERFACE
 export async function health() {
-  /** Check backend health */
-  const res = await fetch(`${BASE}/../`, { method: 'GET' });
-  return handleJson(res);
+  /**
+   * Check backend health at /api/v1/health (preferred), falling back to root /
+   * Returns {} or health payload.
+   */
+  const candidates = [`${BASE}/health`];
+
+  // If using a relative base (/api/v1), also try root /
+  if (BASE === '/api/v1') {
+    candidates.push('/');
+  } else {
+    // Try one level up when BASE is absolute path ending with /api/v1
+    candidates.push(`${BASE}/../`);
+  }
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { method: 'GET' });
+      if (res.ok) {
+        return handleJson(res);
+      }
+    } catch {
+      // continue to next
+    }
+  }
+  throw new Error('Backend not reachable');
 }
 
 // PUBLIC_INTERFACE
