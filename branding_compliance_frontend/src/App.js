@@ -6,7 +6,6 @@ import AssetList from './components/AssetList';
 import AssetDetailModal from './components/AssetDetailModal';
 import DownloadPanel from './components/DownloadPanel';
 import { useJob } from './state/useJob';
-import { getApiBase, health } from './api/client';
 
 // PUBLIC_INTERFACE
 function App() {
@@ -16,33 +15,9 @@ function App() {
   // Job state manager hook
   const job = useJob();
 
-  const [healthStatus, setHealthStatus] = useState({ ok: null, message: '' });
-  const apiBase = getApiBase();
-
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const h = await health();
-        if (!mounted) return;
-        setHealthStatus({ ok: true, message: 'Backend reachable' });
-        // Surface in UI briefly
-        job.toast?.('Connected to backend');
-      } catch (e) {
-        if (!mounted) return;
-        setHealthStatus({ ok: false, message: `Backend unreachable: ${e.message}` });
-        job.toast?.(`Health check failed: ${e.message}`);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // PUBLIC_INTERFACE
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
@@ -69,12 +44,6 @@ function App() {
       <main className="container">
         <section className="card" aria-labelledby="uploads-title">
           <div className="section-title" id="uploads-title">Uploads</div>
-          <div className="row small text-muted" aria-live="polite" style={{ marginBottom: 8 }}>
-            <span className={`badge ${healthStatus.ok === false ? 'error' : healthStatus.ok ? 'success' : ''}`}>
-              API Base: {apiBase}
-            </span>
-            {healthStatus.message && <span className="small" style={{ marginLeft: 8 }}>{healthStatus.message}</span>}
-          </div>
           <UploadCard
             creating={job.creating}
             hasJob={!!job.jobId}
