@@ -1,16 +1,19 @@
-// PUBLIC_INTERFACE
-// Brand Compliance API Client
-// Provides methods to interact with the FastAPI backend v1 endpoints.
-// Base URL is configurable via REACT_APP_API_BASE. In cloud preview, must be HTTPS to avoid mixed content.
-// Default target for this project: https://vscode-internal-34791-beta.beta01.cloud.kavia.ai:3001/api/v1
-
-/* eslint-disable no-console */
-/**
- * Trim trailing slashes for consistent URL building.
- */
-function trimSlash(s) {
-  return (s || '').replace(/\/*$/, '');
-}
+ // PUBLIC_INTERFACE
+ // Brand Compliance API Client
+ // Provides methods to interact with the FastAPI backend v1 endpoints.
+ // Base URL is configurable via REACT_APP_API_BASE. In cloud preview, must be HTTPS to avoid mixed content.
+ // Health endpoint is served at the API base root (GET {REACT_APP_API_BASE}).
+ // Other endpoints continue under the /api/v1 path which should be included in REACT_APP_API_BASE.
+ // Example for this environment (no trailing slash):
+ //   REACT_APP_API_BASE=https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3001/api/v1
+ 
+ /* eslint-disable no-console */
+ /**
+  * Trim trailing slashes for consistent URL building.
+  */
+ function trimSlash(s) {
+   return (s || '').replace(/\/*$/, '');
+ }
 
 /**
  * Attempt to parse a JSON string safely.
@@ -45,7 +48,7 @@ try {
       } else {
         // Known preview environment backend
         resolvedBase =
-          'https://vscode-internal-34791-beta.beta01.cloud.kavia.ai:3001/api/v1';
+          'https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3001/api/v1';
       }
     }
   }
@@ -68,7 +71,7 @@ try {
 
 if (!resolvedBase) {
   // Absolute safe default for this environment
-  resolvedBase = 'https://vscode-internal-34791-beta.beta01.cloud.kavia.ai:3001/api/v1';
+  resolvedBase = 'https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3001/api/v1';
 }
 const BASE = trimSlash(resolvedBase);
 
@@ -148,10 +151,10 @@ async function handleBlob(res) {
 // PUBLIC_INTERFACE
 export async function health() {
   /**
-   * Perform health check against /api/v1/health.
+   * Perform health check against the API base URL directly (GET {REACT_APP_API_BASE}).
    * Returns health payload or throws a rich error when unreachable.
    */
-  const url = `${BASE}/health`;
+  const url = `${BASE}`;
   try {
     const res = await fetch(url, buildOpts({ method: 'GET', headers: { Accept: 'application/json' } }));
     return await handleJson(res);

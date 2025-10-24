@@ -71,7 +71,7 @@ function App() {
           <div className="section-title" id="uploads-title">Uploads</div>
           <div className="row small text-muted" aria-live="polite" style={{ marginBottom: 8 }}>
             <span className={`badge ${healthStatus.ok === false ? 'error' : healthStatus.ok ? 'success' : ''}`}>
-              API: {apiBase}
+              API Base: {apiBase}
             </span>
             {healthStatus.message && <span className="small" style={{ marginLeft: 8 }}>{healthStatus.message}</span>}
           </div>
