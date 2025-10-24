@@ -8,6 +8,8 @@
  //   REACT_APP_API_BASE=https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3001/api/v1
  //
  // Do not hardcode absolute URLs; always use the configured base.
+ // Note: Legacy paths without /api/v1 (e.g., /jobs/{id}/analyze) are handled by backend compat routes,
+ // but the frontend should always call the v1-prefixed endpoints via the configured base to avoid mismatches.
  
  /* eslint-disable no-console */
  /**

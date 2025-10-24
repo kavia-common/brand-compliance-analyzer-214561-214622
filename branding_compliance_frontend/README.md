@@ -17,7 +17,7 @@ Elegant Royal Purple themed React UI for uploading assets, running analysis, pre
 - REACT_APP_API_BASE MUST include `/api/v1` and MUST NOT end with a trailing slash.
   - Example: `https://domain:3001/api/v1`
 - Health check is performed via `GET {REACT_APP_API_BASE}` on app load.
-- All API calls are made relative to this base:
+- All API calls are made relative to this base (always include `/api/v1`):
   - Create Job: `POST {REACT_APP_API_BASE}/jobs`
   - Delete Job: `DELETE {REACT_APP_API_BASE}/jobs/{job_id}`
   - Uploads: `POST {REACT_APP_API_BASE}/jobs/{job_id}/upload/assets|old-brand|new-brand`
@@ -28,6 +28,10 @@ Elegant Royal Purple themed React UI for uploading assets, running analysis, pre
   - Fix: `POST {REACT_APP_API_BASE}/jobs/{job_id}/assets/{asset_id}/fix`
   - Batch Fix: `POST {REACT_APP_API_BASE}/jobs/{job_id}/fix/batch`
   - Download: `GET {REACT_APP_API_BASE}/jobs/{job_id}/download?type=zip|report|both`
+
+Compatibility:
+- The backend exposes legacy aliases for non-prefixed paths (e.g., `/jobs/{job_id}/analyze`) to avoid breaking old links.
+- The frontend must still use the v1-prefixed base to ensure consistency and future-proofing.
 
 Notes:
 - Avoid hardcoded absolute URLs in source; always use the configured base.
