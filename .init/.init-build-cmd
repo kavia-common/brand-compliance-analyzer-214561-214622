@@ -1,0 +1,4 @@
+{
+    "command": "npm install && npx tsc --noEmit && npm test -- --ci",
+    "working_directory": "/home/kavia/workspace/code-generation/brand-compliance-analyzer-214561-214622/branding_compliance_frontend"
+}
