@@ -5,7 +5,7 @@
  // Health endpoint is served at the API base root (GET {REACT_APP_API_BASE}) and is expected to respond.
  // All other endpoints are appended to this base, e.g. POST {REACT_APP_API_BASE}/jobs.
  // Example (no trailing slash):
- //   REACT_APP_API_BASE=https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3001/api/v1
+ //   REACT_APP_API_BASE=https://vscode-internal-27606-beta.beta01.cloud.kavia.ai:3001/api/v1
  //
  // Do not hardcode absolute URLs; always use the configured base.
  // Note: Legacy paths without /api/v1 (e.g., /jobs/{id}/analyze) are handled by backend compat routes,
@@ -52,7 +52,7 @@ try {
       } else {
         // Known preview environment backend
         resolvedBase =
-          'https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3001/api/v1';
+          'https://vscode-internal-27606-beta.beta01.cloud.kavia.ai:3001/api/v1';
       }
     }
   }
@@ -75,7 +75,7 @@ try {
 
 if (!resolvedBase) {
   // Absolute safe default for this environment
-  resolvedBase = 'https://vscode-internal-37364-beta.beta01.cloud.kavia.ai:3001/api/v1';
+  resolvedBase = 'https://vscode-internal-27606-beta.beta01.cloud.kavia.ai:3001/api/v1';
 }
 const BASE = trimSlash(resolvedBase);
 
@@ -221,7 +221,7 @@ export async function uploadNewBrand(jobId, file) {
 // PUBLIC_INTERFACE
 export async function analyze(jobId) {
   /** Trigger analysis */
-  const res = await fetch(`${BASE}/jobs/${encodeURIComponent(jobId)}/analyze`, buildOpts({
+  const res = await fetch(`${"https://vscode-internal-27606-beta.beta01.cloud.kavia.ai:3001/api/v1"}/jobs/${encodeURIComponent(jobId)}/analyze`, buildOpts({
     method: 'POST',
     headers: { Accept: 'application/json' },
   }));
