@@ -16,6 +16,7 @@ Elegant Royal Purple themed React UI for uploading assets, running analysis, pre
 
 - REACT_APP_API_BASE MUST include `/api/v1` and MUST NOT end with a trailing slash.
   - Example: `https://domain:3001/api/v1`
+  - In preview, ensure it points to the backend host on port 3001 and uses https.
 - Health check is performed via `GET {REACT_APP_API_BASE}/health` on app load.
 - All API calls are made relative to this base (always include `/api/v1`):
   - Create Job: `POST {REACT_APP_API_BASE}/jobs`

@@ -73,6 +73,18 @@ if (!resolvedBase) {
 }
 const BASE = resolvedBase;
 
+// Startup diagnostics to help debug Failed to fetch (network/CORS) at runtime
+// Only log once on module load to avoid noisy console.
+try {
+  // eslint-disable-next-line no-console
+  console.info(
+    "[API] Configured API base:", BASE,
+    "| Frontend origin:", FRONTEND_ORIGIN || "(unknown)"
+  );
+} catch {
+  // ignore
+}
+
 // PUBLIC_INTERFACE
 export function getApiBase() {
   /** Returns the configured API base URL */
