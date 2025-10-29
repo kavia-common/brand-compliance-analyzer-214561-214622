@@ -2,7 +2,7 @@
 // Simple API client for PDF logo replacement workflow
 //
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || 'https://vscode-internal-27372-beta.beta01.cloud.kavia.ai:3001';
+const API_BASE = process.env.REACT_APP_API_BASE || 'https://vscode-internal-27372-beta.beta01.cloud.kavia.ai:3001';
 
 // PUBLIC_INTERFACE
 export async function startLogoReplaceJob({ pdfFile, oldLogoFiles, newLogoFile, dpi = 250, maxPages = null, matchThreshold = 0.8 }) {
