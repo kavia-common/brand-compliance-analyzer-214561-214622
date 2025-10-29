@@ -30,52 +30,46 @@ function safeParseJSON(text) {
   }
 }
 
-// Resolve API base with HTTPS preference to avoid mixed content in preview domains.
-// Priority:
-// 1) REACT_APP_API_BASE if provided (used as-is but upgraded to https if same host and http)
-// 2) If running on :3000, use same host with https:// and port 3001
-// 3) Otherwise, use the known backend preview base
-// 4) Final fallback: relative /api/v1 (works only if proxy is configured)
+/**
+ * Resolve API base with HTTPS preference to avoid mixed content in preview domains.
+ * Resolution order:
+ * 1) REACT_APP_API_BASE if provided (must include /api/v1, no trailing slash).
+ * 2) If running on :3000 (preview), use same hostname with https:// and port 3001.
+ * 3) Fallback to relative /api/v1 (only works if a dev proxy is configured).
+ */
 const envBaseRaw = trimSlash(process.env.REACT_APP_API_BASE);
-let resolvedBase = envBaseRaw;
+let resolvedBase = envBaseRaw || '';
 
 let FRONTEND_ORIGIN = '';
 try {
   const loc = typeof window !== 'undefined' ? window.location : null;
   FRONTEND_ORIGIN = loc ? `${loc.protocol}//${loc.host}` : '';
 
-  if (!resolvedBase || resolvedBase === '/api/v1') {
-    if (loc && loc.hostname) {
-      if (loc.port === '3000') {
-        // Force https against backend port 3001 on same hostname
-        resolvedBase = `https://vscode-internal-14161-beta.beta01.cloud.kavia.ai:3001/api/v1`;
-      } else {
-        // Known preview environment backend
-        resolvedBase =
-          'https://vscode-internal-14161-beta.beta01.cloud.kavia.ai:3001/api/v1';
-      }
-    }
+  if (!resolvedBase && loc && loc.hostname) {
+    const host = loc.hostname;
+    // Always target backend on port 3001 with https on the same hostname
+    resolvedBase = `https://${host}:3001/api/v1`;
   }
 
-  // If env provided an http:// URL on preview host, upgrade to https to prevent mixed content.
+  // Normalize protocol for preview; prefer https if host is *.kavia.ai
   if (resolvedBase?.startsWith('http://')) {
     try {
       const u = new URL(resolvedBase);
-      if (u.hostname === loc?.hostname || (u.hostname || '').endsWith('.kavia.ai')) {
+      if ((u.hostname || '').endsWith('.kavia.ai')) {
         u.protocol = 'https:';
         resolvedBase = trimSlash(u.toString());
       }
     } catch {
-      // leave as-is if not parseable
+      // ignore if cannot parse
     }
   }
 } catch {
-  // window not available in tests; will use fallback below
+  // window not available (tests/SSR)
 }
 
 if (!resolvedBase) {
-  // Absolute safe default for this environment
-  resolvedBase = 'https://vscode-internal-14161-beta.beta01.cloud.kavia.ai:3001/api/v1';
+  // Final conservative fallback
+  resolvedBase = '/api/v1';
 }
 const BASE = resolvedBase;
 
