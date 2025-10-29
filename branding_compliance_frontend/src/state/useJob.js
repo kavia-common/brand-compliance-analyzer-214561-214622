@@ -205,7 +205,7 @@ export function useJob() {
       // Normalizing: include optional type/mime, page_count, detections (page-indexed for PDFs)
       const normalized = (r.assets || r || []).map((a, idx) => ({
         id: a.id ?? a.asset_id ?? String(idx),
-        name: a.name ?? a.filename ?? `Asset ${idx + 1}`,
+        name: a.name ?? a.original_filename ?? a.filename ?? `Asset ${idx + 1}`,
         issues: a.issues ?? a.issues_count ?? 0,
         issues_list: a.issues_list ?? [],
         thumbnail_url: a.thumbnail_url ?? null,

@@ -37,7 +37,12 @@ function safeParseJSON(text) {
  * 2) If running on :3000 (preview), use same hostname with https:// and port 3001.
  * 3) Fallback to relative /api/v1 (only works if a dev proxy is configured).
  */
-const envBaseRaw = "https://vscode-internal-22344-beta.beta01.cloud.kavia.ai:3001/api/v1"
+const envBaseRaw =
+  (typeof process !== 'undefined' &&
+    typeof process.env !== 'undefined' &&
+    process.env.REACT_APP_API_BASE)
+    ? trimSlash(process.env.REACT_APP_API_BASE)
+    : '';
 let resolvedBase = envBaseRaw || '';
 
 let FRONTEND_ORIGIN = '';
@@ -256,9 +261,9 @@ export async function results(jobId) {
 // PUBLIC_INTERFACE
 export function isPdfAsset(asset) {
   /** Returns true if asset indicates a PDF (by type or filename) */
-  const name = (asset?.name || asset?.filename || '').toLowerCase();
+  const name = (asset?.name || asset?.original_filename || asset?.filename || '').toLowerCase();
   const type = (asset?.type || asset?.mime || '').toLowerCase();
-  return name.endsWith('.pdf') || type === 'application/pdf';
+  return name.endsWith('.pdf') || type === 'application/pdf' || type === 'pdf';
 }
 
 // PUBLIC_INTERFACE
