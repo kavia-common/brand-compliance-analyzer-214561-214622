@@ -149,10 +149,10 @@ async function handleBlob(res) {
 // PUBLIC_INTERFACE
 export async function health() {
   /**
-   * Perform health check against the API base URL directly (GET {REACT_APP_API_BASE}).
+   * Perform health check against the API v1 health endpoint (GET {REACT_APP_API_BASE}/health).
    * Returns health payload or throws a rich error when unreachable.
    */
-  const url = `${BASE}`;
+  const url = `${BASE}/health`;
   try {
     const res = await fetch(url, buildOpts({ method: 'GET', headers: { Accept: 'application/json' } }));
     return await handleJson(res);
