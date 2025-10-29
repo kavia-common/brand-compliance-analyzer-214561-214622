@@ -48,11 +48,11 @@ try {
     if (loc && loc.hostname) {
       if (loc.port === '3000') {
         // Force https against backend port 3001 on same hostname
-        resolvedBase = `https://${loc.hostname}:3001/api/v1`;
+        resolvedBase = `https://vscode-internal-14161-beta.beta01.cloud.kavia.ai:3001/api/v1`;
       } else {
         // Known preview environment backend
         resolvedBase =
-          'https://vscode-internal-24190-beta.beta01.cloud.kavia.ai:3001/api/v1';
+          'https://vscode-internal-14161-beta.beta01.cloud.kavia.ai:3001/api/v1';
       }
     }
   }
@@ -75,9 +75,9 @@ try {
 
 if (!resolvedBase) {
   // Absolute safe default for this environment
-  resolvedBase = 'https://vscode-internal-24190-beta.beta01.cloud.kavia.ai:3001/api/v1';
+  resolvedBase = 'https://vscode-internal-14161-beta.beta01.cloud.kavia.ai:3001/api/v1';
 }
-const BASE = "https://vscode-internal-24190-beta.beta01.cloud.kavia.ai:3001/api/v1";
+const BASE = resolvedBase;
 
 // PUBLIC_INTERFACE
 export function getApiBase() {
@@ -221,7 +221,7 @@ export async function uploadNewBrand(jobId, file) {
 // PUBLIC_INTERFACE
 export async function analyze(jobId) {
   /** Trigger analysis */
-  const res = await fetch(`${"https://vscode-internal-24190-beta.beta01.cloud.kavia.ai:3001/api/v1"}/jobs/${encodeURIComponent(jobId)}/analyze`, buildOpts({
+  const res = await fetch(`${BASE}/jobs/${encodeURIComponent(jobId)}/analyze`, buildOpts({
     method: 'POST',
     headers: { Accept: 'application/json' },
   }));
