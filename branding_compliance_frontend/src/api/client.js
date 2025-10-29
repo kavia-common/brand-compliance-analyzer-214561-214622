@@ -5,7 +5,7 @@
  // Health endpoint is served at the API base root (GET {REACT_APP_API_BASE}) and is expected to respond.
  // All other endpoints are appended to this base, e.g. POST {REACT_APP_API_BASE}/jobs.
  // Example (no trailing slash):
- //   REACT_APP_API_BASE=https://vscode-internal-24190-beta.beta01.cloud.kavia.ai:3001/api/v1
+ //   REACT_APP_API_BASE=https://vscode-internal-22344-beta.beta01.cloud.kavia.ai:3001/api/v1
  //
  // Do not hardcode absolute URLs; always use the configured base.
  // Note: Legacy paths without /api/v1 (e.g., /jobs/{id}/analyze) are handled by backend compat routes,
@@ -37,7 +37,7 @@ function safeParseJSON(text) {
  * 2) If running on :3000 (preview), use same hostname with https:// and port 3001.
  * 3) Fallback to relative /api/v1 (only works if a dev proxy is configured).
  */
-const envBaseRaw = trimSlash(process.env.REACT_APP_API_BASE);
+const envBaseRaw = "https://vscode-internal-22344-beta.beta01.cloud.kavia.ai:3001/api/v1"
 let resolvedBase = envBaseRaw || '';
 
 let FRONTEND_ORIGIN = '';
@@ -48,7 +48,7 @@ try {
   if (!resolvedBase && loc && loc.hostname) {
     const host = loc.hostname;
     // Always target backend on port 3001 with https on the same hostname
-    resolvedBase = `https://${host}:3001/api/v1`;
+    resolvedBase = `https://vscode-internal-22344-beta.beta01.cloud.kavia.ai:3001/api/v1`;
   }
 
   // Normalize protocol for preview; prefer https if host is *.kavia.ai
