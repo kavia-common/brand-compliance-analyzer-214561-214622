@@ -160,13 +160,17 @@ export function useJob() {
     setLoadingResults(true);
     try {
       const r = await api.results(jobId);
-      // Normalizing: expect r.assets? with id, name, issues_count, thumbnails?
+      // Normalizing: include optional type/mime, page_count, detections (page-indexed for PDFs)
       const normalized = (r.assets || r || []).map((a, idx) => ({
         id: a.id ?? a.asset_id ?? String(idx),
         name: a.name ?? a.filename ?? `Asset ${idx + 1}`,
         issues: a.issues ?? a.issues_count ?? 0,
         issues_list: a.issues_list ?? [],
         thumbnail_url: a.thumbnail_url ?? null,
+        type: a.type ?? a.mime ?? null,
+        page_count: a.page_count ?? a.pages ?? null,
+        detections: a.detections ?? a.page_detections ?? a.issues_boxes ?? a.issues_list ?? [],
+        job_id: jobId,
       }));
       setAssets(normalized);
     } catch (e) {
@@ -178,9 +182,9 @@ export function useJob() {
 
   // PUBLIC_INTERFACE
   const getPreviewUrl = useCallback(
-    (assetId, view = 'original') => {
+    (assetId, view = 'original', page = null) => {
       if (!jobId) return '';
-      return api.assetPreviewUrl(jobId, assetId, view);
+      return api.assetPreviewUrl(jobId, assetId, view, page);
     },
     [jobId]
   );

@@ -246,13 +246,37 @@ export async function results(jobId) {
   return handleJson(res);
 }
 
+/** Detect whether an asset or filename is a PDF (helper for UI logic) */
 // PUBLIC_INTERFACE
-export function assetPreviewUrl(jobId, assetId, view = 'original') {
-  /** Build a URL for asset preview that can be used as <img src> */
+export function isPdfAsset(asset) {
+  /** Returns true if asset indicates a PDF (by type or filename) */
+  const name = (asset?.name || asset?.filename || '').toLowerCase();
+  const type = (asset?.type || asset?.mime || '').toLowerCase();
+  return name.endsWith('.pdf') || type === 'application/pdf';
+}
+
+// PUBLIC_INTERFACE
+export function assetPreviewUrl(jobId, assetId, view = 'original', page = null) {
+  /** Build a URL for asset preview that can be used as <img src>, supports optional page for PDFs */
   const v = encodeURIComponent(view);
-  return `${BASE}/jobs/${encodeURIComponent(jobId)}/assets/${encodeURIComponent(
-    assetId
-  )}/preview?view=${v}`;
+  const base = `${BASE}/jobs/${encodeURIComponent(jobId)}/assets/${encodeURIComponent(assetId)}/preview?view=${v}`;
+  const p = page != null ? `&page=${encodeURIComponent(page)}` : '';
+  return `${base}${p}`;
+}
+
+// PUBLIC_INTERFACE
+export async function downloadFixedPdf(jobId, assetId) {
+  /** Download the rebuilt fixed PDF for a single PDF asset; falls back to general zip if not supported */
+  // Try the preview endpoint with view=fixed and no page, expecting a PDF blob
+  const url = `${BASE}/jobs/${encodeURIComponent(jobId)}/assets/${encodeURIComponent(assetId)}/preview?view=fixed`;
+  const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
+  if (!res.ok) {
+    // if backend does not support single fixed PDF, surface error to caller
+    const err = new Error(`HTTP ${res.status} ${res.statusText}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.blob();
 }
 
 // PUBLIC_INTERFACE

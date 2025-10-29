@@ -90,9 +90,10 @@ function App() {
       {job.activeAsset && (
         <AssetDetailModal
           asset={job.activeAsset}
+          jobId={job.jobId}
           onClose={() => job.setActiveAsset(null)}
           onFix={(strategy) => job.fixAsset(job.activeAsset.id, strategy)}
-          getPreviewUrl={(view) => job.getPreviewUrl(job.activeAsset.id, view)}
+          getPreviewUrl={(view, page) => job.getPreviewUrl(job.activeAsset.id, view, page)}
           fixing={job.fixingIds.has(job.activeAsset.id)}
           toast={job.toast}
         />
