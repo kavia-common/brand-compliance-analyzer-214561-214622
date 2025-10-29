@@ -30,9 +30,16 @@ export default function AssetDetailModal({
 
   const isPdf = isPdfAsset(asset);
 
+  // Local image src with fallback handling
+  const [imgSrc, setImgSrc] = useState('');
+  const [overlayTried, setOverlayTried] = useState(false); // if true and overlay fails, we fallback to original
+  const [fixedReadyHint, setFixedReadyHint] = useState(false); // show non-blocking badge when fixed not ready
+
   // Determine page count from either job pages (filtered) or asset metadata
   useEffect(() => {
     setPage(0);
+    setOverlayTried(false);
+    setFixedReadyHint(false);
     const pc = asset?.page_count ?? asset?.pages ?? null;
     setPageCountMeta(typeof pc === 'number' && pc > 0 ? pc : null);
   }, [asset]);
@@ -75,9 +82,7 @@ export default function AssetDetailModal({
     if (!asset) return '';
     // If job-level page preview is available, prefer it
     if (isPdf && typeof getPagePreviewUrl === 'function' && globalPageIndex != null) {
-      // For 'overlay' view, we request 'original' and draw overlay boxes ourselves for clarity
-      const effectiveView = view === 'overlay' ? 'original' : view;
-      const u = getPagePreviewUrl(globalPageIndex, effectiveView);
+      const u = getPagePreviewUrl(globalPageIndex, view);
       if (u) return u;
     }
     // Otherwise fallback to asset-level preview
@@ -115,15 +120,57 @@ export default function AssetDetailModal({
   const onImgLoad = (e) => {
     const el = e.currentTarget;
     setImgNatural({ w: el.naturalWidth || 0, h: el.naturalHeight || 0 });
+    // Successful load clears fixed hint if we are on fixed view
+    if (view === 'fixed') {
+      setFixedReadyHint(false);
+    }
   };
+
+  // Compute original URL for fallback
+  const originalUrl = useMemo(() => {
+    if (!asset) return '';
+    if (isPdf && typeof getPagePreviewUrl === 'function' && globalPageIndex != null) {
+      return getPagePreviewUrl(globalPageIndex, 'original');
+    }
+    const job = jobId ?? asset?.job_id;
+    if (!job) return '';
+    return assetPreviewUrl(job, asset.id, 'original', isPdf ? page : null);
+  }, [asset, isPdf, getPagePreviewUrl, globalPageIndex, jobId, page]);
+
+  // Update imgSrc whenever computed url or view/page changes
+  useEffect(() => {
+    setOverlayTried(false);
+    setFixedReadyHint(false);
+    setImgSrc(url || '');
+  }, [url, view, page]);
 
   const handleImgError = () => {
     // Log detailed info to console and show a concise toast
     try {
       // eslint-disable-next-line no-console
-      console.warn('Preview image failed to load', { url, view, page });
+      console.warn('Preview image failed to load', { url: imgSrc, requestedView: view, page, originalUrl });
     } catch {
       // ignore
+    }
+    if (view === 'overlay') {
+      // Switch to original on-the-fly and set overlayTried to avoid looping
+      if (!overlayTried && originalUrl) {
+        setOverlayTried(true);
+        setImgSrc(originalUrl);
+        // Non-blocking toast
+        toast?.('Overlay not ready yet, showing original');
+        return;
+      }
+    }
+    if (view === 'fixed') {
+      // Show non-blocking badge hint when fixed not ready and keep trying after apply-fix
+      setFixedReadyHint(true);
+      // Fallback to original content for user to keep browsing
+      if (originalUrl) {
+        setImgSrc(originalUrl);
+        toast?.('Fixed preview not ready yet, showing original');
+        return;
+      }
     }
     toast?.('Preview not available (file missing or not yet generated)');
   };
@@ -205,6 +252,10 @@ export default function AssetDetailModal({
   const onApplyFixClick = async () => {
     if (isPdf && typeof applyJobFix === 'function') {
       await applyJobFix();
+      // After apply-fix completes, retry fetching overlay (and fixed) by resetting imgSrc to requested view
+      setOverlayTried(false);
+      setFixedReadyHint(false);
+      setImgSrc(url || '');
     } else {
       onFix?.(strategy);
     }
@@ -285,11 +336,11 @@ export default function AssetDetailModal({
         </div>
 
         <div className="card mt-12" style={{ textAlign: 'center', position: 'relative' }}>
-          {url ? (
+          {imgSrc ? (
             <div style={{ display: 'inline-block', position: 'relative', maxWidth: '100%' }}>
               <img
                 ref={imgRef}
-                src={url}
+                src={imgSrc}
                 alt={`${view} preview${isPdf ? ` (page ${page + 1})` : ''}`}
                 style={{ maxWidth: '100%', maxHeight: 440, borderRadius: 10, display: 'block' }}
                 onLoad={onImgLoad}
@@ -315,6 +366,16 @@ export default function AssetDetailModal({
           {isPdf && (
             <div className="mt-8 small" aria-live="polite">
               {statusMessage}
+              {view === 'fixed' && fixedReadyHint && (
+                <span className="badge" style={{ marginLeft: 8 }} aria-label="Fixed not ready">
+                  Fixed not ready
+                </span>
+              )}
+              {view === 'overlay' && overlayTried && (
+                <span className="badge" style={{ marginLeft: 8 }} aria-label="Overlay not ready">
+                  Overlay not ready
+                </span>
+              )}
             </div>
           )}
         </div>
