@@ -1,6 +1,42 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as api from '../api/client';
 
+// Helpers to normalize page listing payloads from backend
+function normalizePagesPayload(raw) {
+  // The response shape is implementation-defined; accept {pages: []} or [ ... ]
+  const arr = Array.isArray(raw) ? raw : raw?.pages || raw?.items || [];
+  const norm = (arr || []).map((p, i) => {
+    const idx =
+      p?.index ?? p?.global_index ?? p?.page_global ?? p?.page_index ?? p?.page ?? i;
+    const assetId =
+      p?.asset_id ?? p?.assetId ?? p?.document_id ?? p?.pdf_id ?? p?.doc_id ?? null;
+    const hasDet =
+      p?.has_detection ??
+      p?.detected ??
+      (Array.isArray(p?.detections) ? p.detections.length > 0 : undefined);
+    const fixed =
+      p?.fixed ??
+      (typeof p?.status === 'string' && p.status.toLowerCase().includes('fixed')) ??
+      false;
+    const status =
+      p?.status ??
+      p?.state ??
+      (fixed ? 'fixed' : hasDet === false ? 'skipped' : 'detected');
+    const pageInDoc = p?.page_in_doc ?? p?.doc_page ?? p?.page_index ?? null;
+    return {
+      index: Number(idx),
+      asset_id: assetId != null ? String(assetId) : null,
+      has_detection: hasDet,
+      fixed: Boolean(fixed),
+      status,
+      page_in_doc: pageInDoc != null ? Number(pageInDoc) : null,
+      raw: p,
+    };
+  });
+  // sort by index asc if indices appear numeric
+  return norm.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+}
+
 // PUBLIC_INTERFACE
 export function useJob() {
   /**
@@ -11,7 +47,8 @@ export function useJob() {
    * - poll status
    * - fetch results
    * - fix assets / batch fix
-   * - download artifacts
+   * - job-level apply-fix (per-page PDF)
+   * - download artifacts (zip/report/both/pdf)
    * Includes toast-based error handling and basic filters.
    */
   const [jobId, setJobId] = useState(null);
@@ -27,6 +64,10 @@ export function useJob() {
   const [toastState, setToastState] = useState({ visible: false, message: '' });
   const toastTimer = useRef(null);
   const [fixingIds, setFixingIds] = useState(new Set());
+  const [applyingFix, setApplyingFix] = useState(false);
+
+  // Per-page PDF workflow state
+  const [pages, setPages] = useState([]); // normalized list from listPages
 
   // PUBLIC_INTERFACE
   const toast = useCallback((msg) => {
@@ -136,8 +177,9 @@ export function useJob() {
       if (st?.status?.toLowerCase() === 'complete' || st?.progress_percent >= 100) {
         setIsAnalyzing(false);
         clearPolling();
-        // load results on complete
+        // load results and pages on complete
         await loadResults();
+        await loadPages();
       }
     } catch (e) {
       toast(`Status error: ${e.message}`);
@@ -181,10 +223,32 @@ export function useJob() {
   }, [jobId, toast]);
 
   // PUBLIC_INTERFACE
+  const loadPages = useCallback(async () => {
+    if (!jobId) return;
+    try {
+      const raw = await api.listPages(jobId);
+      const norm = normalizePagesPayload(raw);
+      setPages(norm);
+    } catch (e) {
+      // Do not spam toast if pages endpoint not implemented
+      console.warn('Pages listing failed:', e?.message || e);
+    }
+  }, [jobId]);
+
+  // PUBLIC_INTERFACE
   const getPreviewUrl = useCallback(
     (assetId, view = 'original', page = null) => {
       if (!jobId) return '';
       return api.assetPreviewUrl(jobId, assetId, view, page);
+    },
+    [jobId]
+  );
+
+  // PUBLIC_INTERFACE
+  const getPagePreviewUrl = useCallback(
+    (pageIndex, view = 'original') => {
+      if (!jobId && jobId !== 0) return '';
+      return api.pagePreviewUrl(jobId, pageIndex, view);
     },
     [jobId]
   );
@@ -212,6 +276,24 @@ export function useJob() {
   );
 
   // PUBLIC_INTERFACE
+  const applyJobFix = useCallback(async () => {
+    if (!jobId) return toast('No job');
+    setApplyingFix(true);
+    try {
+      await api.applyFix(jobId);
+      toast('Applying fixes…');
+      // After applying, refresh both results and pages to update previews/states
+      await loadResults();
+      await loadPages();
+      toast('Fixes applied');
+    } catch (e) {
+      toast(`Apply fix failed: ${e.message}`);
+    } finally {
+      setApplyingFix(false);
+    }
+  }, [jobId, loadResults, loadPages, toast]);
+
+  // PUBLIC_INTERFACE
   const download = useCallback(
     async (type) => {
       if (!jobId) return toast('No job');
@@ -236,6 +318,27 @@ export function useJob() {
     },
     [jobId, toast]
   );
+
+  // PUBLIC_INTERFACE
+  const downloadPdf = useCallback(async () => {
+    if (!jobId) return toast('No job');
+    setDownloading(true);
+    try {
+      const blob = await api.downloadPdf(jobId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fixed-${jobId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      toast(`Download PDF failed: ${e.message}`);
+    } finally {
+      setDownloading(false);
+    }
+  }, [jobId, toast]);
 
   const filteredAssets = useMemo(() => {
     let list = assets;
@@ -269,11 +372,17 @@ export function useJob() {
     triggerAnalyze,
     refreshStatus,
     loadResults,
+    loadPages,
+    pages,
     fixAsset,
+    applyJobFix,
     getPreviewUrl,
+    getPagePreviewUrl,
     download,
+    downloadPdf,
     toast,
     toastState,
     fixingIds,
+    applyingFix,
   };
 }

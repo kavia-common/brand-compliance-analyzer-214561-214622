@@ -18,7 +18,7 @@
  function trimSlash(s) {
    return (s || '').replace(/\/*$/, '');
  }
-
+ 
 /**
  * Attempt to parse a JSON string safely.
  */
@@ -267,7 +267,9 @@ export function assetPreviewUrl(jobId, assetId, view = 'original', page = null) 
   const v = encodeURIComponent(view);
   const base = `${BASE}/jobs/${encodeURIComponent(jobId)}/assets/${encodeURIComponent(assetId)}/preview?view=${v}`;
   const p = page != null ? `&page=${encodeURIComponent(page)}` : '';
-  return `${base}${p}`;
+  // Add cache buster to avoid stale previews
+  const ts = `&_=${Date.now()}`;
+  return `${base}${p}${ts}`;
 }
 
 // PUBLIC_INTERFACE
@@ -314,6 +316,61 @@ export async function batchFix(jobId, payload = {}) {
 export async function download(jobId, type = 'zip') {
   /** Download artifacts; type: zip|report|both. Returns Blob */
   const url = `${BASE}/jobs/${encodeURIComponent(jobId)}/download?type=${encodeURIComponent(type)}`;
+  const res = await fetch(url, buildOpts({ method: 'GET' }));
+  return handleBlob(res);
+}
+
+/* =========================
+   New Per-Page PDF Workflow
+   ========================= */
+
+// PUBLIC_INTERFACE
+export async function listPages(jobId) {
+  /**
+   * List per-page info across job documents.
+   * GET /api/v1/jobs/{job_id}/pages
+   * Returns an implementation-defined JSON. Caller should normalize as needed.
+   */
+  const res = await fetch(`${BASE}/jobs/${encodeURIComponent(jobId)}/pages`, buildOpts({
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  }));
+  return handleJson(res);
+}
+
+// PUBLIC_INTERFACE
+export function pagePreviewUrl(jobId, pageIndex, view = 'original') {
+  /**
+   * Build URL for previewing a specific page index with a given view.
+   * GET /api/v1/jobs/{job_id}/pages/{index}/preview?view=original|overlay|fixed
+   */
+  const idx = Number(pageIndex);
+  const v = encodeURIComponent(view);
+  const ts = `_=${Date.now()}`; // cache buster
+  return `${BASE}/jobs/${encodeURIComponent(jobId)}/pages/${idx}/preview?view=${v}&${ts}`;
+}
+
+// PUBLIC_INTERFACE
+export async function applyFix(jobId) {
+  /**
+   * Apply fixes at job-level across detected pages.
+   * POST /api/v1/jobs/{job_id}/apply-fix
+   */
+  const res = await fetch(`${BASE}/jobs/${encodeURIComponent(jobId)}/apply-fix`, buildOpts({
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  }));
+  return handleJson(res);
+}
+
+// PUBLIC_INTERFACE
+export async function downloadPdf(jobId) {
+  /**
+   * Download a single combined fixed PDF for document assets.
+   * GET /api/v1/jobs/{job_id}/download?type=pdf
+   * Returns Blob (application/pdf)
+   */
+  const url = `${BASE}/jobs/${encodeURIComponent(jobId)}/download?type=pdf`;
   const res = await fetch(url, buildOpts({ method: 'GET' }));
   return handleBlob(res);
 }

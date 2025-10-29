@@ -1,14 +1,17 @@
 import React from 'react';
 
 // PUBLIC_INTERFACE
-export default function DownloadPanel({ hasJob, onDownloadZip, onDownloadReport, onDownloadBoth, downloading }) {
-  /** Buttons to download artifacts */
+export default function DownloadPanel({ hasJob, onDownloadZip, onDownloadReport, onDownloadBoth, onDownloadPdf, downloading }) {
+  /** Buttons to download artifacts, including final combined PDF for documents */
   return (
     <div className="grid">
-      <button className="btn" onClick={onDownloadZip} disabled={!hasJob || downloading}>
+      <button className="btn" onClick={onDownloadPdf} disabled={!hasJob || downloading}>
+        {downloading ? 'Preparing…' : 'Download Fixed PDF'}
+      </button>
+      <button className="btn secondary" onClick={onDownloadZip} disabled={!hasJob || downloading}>
         {downloading ? 'Preparing…' : 'Download Fixed Zip'}
       </button>
-      <button className="btn secondary" onClick={onDownloadReport} disabled={!hasJob || downloading}>
+      <button className="btn ghost" onClick={onDownloadReport} disabled={!hasJob || downloading}>
         {downloading ? 'Preparing…' : 'Download Report'}
       </button>
       <button className="btn ghost" onClick={onDownloadBoth} disabled={!hasJob || downloading}>

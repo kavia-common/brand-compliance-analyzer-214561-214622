@@ -78,6 +78,7 @@ function App() {
             <div className="section-title" id="download-title">Downloads</div>
             <DownloadPanel
               hasJob={!!job.jobId}
+              onDownloadPdf={() => job.downloadPdf()}
               onDownloadZip={() => job.download('zip')}
               onDownloadReport={() => job.download('report')}
               onDownloadBoth={() => job.download('both')}
@@ -94,6 +95,11 @@ function App() {
           onClose={() => job.setActiveAsset(null)}
           onFix={(strategy) => job.fixAsset(job.activeAsset.id, strategy)}
           getPreviewUrl={(view, page) => job.getPreviewUrl(job.activeAsset.id, view, page)}
+          getPagePreviewUrl={job.getPagePreviewUrl}
+          loadPages={job.loadPages}
+          pages={job.pages}
+          applyJobFix={job.applyJobFix}
+          jobApplyingFix={job.applyingFix}
           fixing={job.fixingIds.has(job.activeAsset.id)}
           toast={job.toast}
         />
