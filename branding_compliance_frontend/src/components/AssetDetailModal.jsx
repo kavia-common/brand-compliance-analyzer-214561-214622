@@ -117,6 +117,17 @@ export default function AssetDetailModal({
     setImgNatural({ w: el.naturalWidth || 0, h: el.naturalHeight || 0 });
   };
 
+  const handleImgError = () => {
+    // Log detailed info to console and show a concise toast
+    try {
+      // eslint-disable-next-line no-console
+      console.warn('Preview image failed to load', { url, view, page });
+    } catch {
+      // ignore
+    }
+    toast?.('Preview not available (file missing or not yet generated)');
+  };
+
   // Compute bounding box styles relative to rendered image size
   const renderBoxes = () => {
     if (!imgRef.current || !imgNatural.w || !imgNatural.h || detections.length === 0) return null;
@@ -282,7 +293,7 @@ export default function AssetDetailModal({
                 alt={`${view} preview${isPdf ? ` (page ${page + 1})` : ''}`}
                 style={{ maxWidth: '100%', maxHeight: 440, borderRadius: 10, display: 'block' }}
                 onLoad={onImgLoad}
-                onError={() => toast?.('Preview not available')}
+                onError={handleImgError}
               />
               {overlayEnabled && view === 'overlay' && (
                 <div

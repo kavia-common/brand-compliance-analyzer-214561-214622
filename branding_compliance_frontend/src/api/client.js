@@ -37,7 +37,7 @@ function safeParseJSON(text) {
  * 2) If running on :3000 (preview), use same hostname with https:// and port 3001.
  * 3) Fallback to relative /api/v1 (only works if a dev proxy is configured).
  */
-const envBaseRaw = "https://vscode-internal-22344-beta.beta01.cloud.kavia.ai:3001/api/v1"
+const envBaseRaw = trimSlash(process.env.REACT_APP_API_BASE || "")
 let resolvedBase = envBaseRaw || '';
 
 let FRONTEND_ORIGIN = '';
@@ -48,7 +48,7 @@ try {
   if (!resolvedBase && loc && loc.hostname) {
     const host = loc.hostname;
     // Always target backend on port 3001 with https on the same hostname
-    resolvedBase = `https://vscode-internal-22344-beta.beta01.cloud.kavia.ai:3001/api/v1`;
+    resolvedBase = `https://${host}:3001/api/v1`;
   }
 
   // Normalize protocol for preview; prefer https if host is *.kavia.ai
