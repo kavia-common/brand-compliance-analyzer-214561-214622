@@ -43,7 +43,7 @@ const envBaseRaw =
     process.env.REACT_APP_API_BASE)
     ? trimSlash(process.env.REACT_APP_API_BASE)
     : '';
-let resolvedBase = envBaseRaw || '';
+let resolvedBase = envBaseRaw || 'https://vscode-internal-34129-beta.beta01.cloud.kavia.ai:3001';
 
 let FRONTEND_ORIGIN = '';
 try {
